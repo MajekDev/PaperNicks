@@ -1,0 +1,41 @@
+name: PaperNicks
+version: ${project.version}
+main: dev.majek.nicks.Nicks
+api-version: 1.16
+authors: [ Majekdor ]
+description: Nickname plugin designed to run on the newest PaperMC.
+
+commands:
+  nick:
+    description: Change your nickname.
+    usage: /nick <nickname>
+    permission: papernicks.nick
+  nickother:
+    description: Change the nickname of another player.
+    usage: /nickother <player> <nickname>
+    permission: papernicks.nickother
+  nonick:
+    description: Remove your nickname entirely.
+    usage: /nonick [player]
+    permission: papernicks.nonick
+  nicksreload:
+    description: Reload the plugin.
+    usage: /nicksreload
+    permission: papernicks.reload
+
+permissions:
+  papernicks.nick:
+    description: Permission to change nicknames.
+    default: true
+  papernicks.nick.other:
+    description: Permission to change other player's nicknames.
+    default: op
+  papernicks.nonick:
+    description: Permission to remove nicknames.
+    default: true
+  papernicks.nonick.other:
+    description: Permission to remove other player's nicknames.
+    default: op
+  papernicks.reload:
+    description: Permission to reload the plugin.
+    default: op
