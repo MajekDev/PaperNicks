@@ -9,8 +9,18 @@ max-length: 20
 # The minimum number of characters (excluding color codes) a nickname may be
 min-length: 3
 
+# Whether or not nicknames must be alphanumeric - Regex: [a-zA-Z0-9]+
+require-alphanumeric: true
+
+# The plugin requires a chat formatter for nicknames to format properly in chat
+# PaperNicks can do this itself but if you have another formatter such as EssentialsChat or VaultChatFormatter you should disable this
+chat-formatter: true
+
+# The format of chat messages. Must include {displayname} and {message} placeholders.
+chat-format: "<{displayname}> {message}"
+
 # Whether or not to support legacy nicknames (&a, &l, etc.)
-legacy: false
+legacy-colors: false
 
 # This should only be enabled if the developer needs additional information about plugin issues
 debug: false
@@ -19,5 +29,13 @@ debug: false
 # Message configuration
 messages:
   invalidSender: "<red>You must be in-game to use this command."
+  unknownPlayer: "<red>Unknown player %player%."
+  noPermission: "<red>You do not have permission to execute this command."
   tooShort: "<red>That nickname is too short. Minimum length is %length% characters."
   tooLong: "<red>That nickname is too long. Maximum length is %length% characters."
+  nonAlphanumeric: "<red>Your nickname must be alphanumeric."
+  nicknameSet: "<gray>Your nickname has been set to: <white>%nick%<gray>."
+  nicknameSetOther: "<aqua>%player%<gray>'s nickname has been set to: <white>%nick%<gray>."
+  nicknameRemoved: "<gray>Nickname removed."
+  nicknameRemovedOther: "<aqua>%player%<gray>'s nickname removed."
+  onlyColorCodes: "<red>You may only include color codes."

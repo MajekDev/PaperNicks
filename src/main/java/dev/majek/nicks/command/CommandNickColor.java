@@ -25,7 +25,6 @@
 package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
-import dev.majek.nicks.api.SetNickEvent;
 import dev.majek.nicks.config.NicksMessages;
 import java.util.Collections;
 import java.util.List;
@@ -39,9 +38,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles <code>/nick</code> command execution and tab completion.
+ * Handles <code>/nickcolor</code> command execution and tab completion.
  */
-public class CommandNick implements TabExecutor {
+public class CommandNickColor implements TabExecutor {
 
   @Override
   public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
@@ -63,41 +62,23 @@ public class CommandNick implements TabExecutor {
       nickInput = Nicks.utils().legacyToMini(nickInput);
     }
 
-    Component nickname = MiniMessage.get().parse(nickInput);
-    String plainTextNick = PlainTextComponentSerializer.plainText().serialize(nickname);
-    int maxLength = Nicks.config().MAX_LENGTH;
-    int minLength = Nicks.config().MIN_LENGTH;
-
-    // Make sure the nickname is alphanumeric if that's enabled
-    if (Nicks.config().REQUIRE_ALPHANUMERIC) {
-      if (!plainTextNick.matches("[a-zA-Z0-9]+")) {
-        NicksMessages.NON_ALPHANUMERIC.send(player);
-        return true;
-      }
-    }
-
-    // Make sure the nickname isn't too short
-    if (plainTextNick.length() < minLength) {
-      NicksMessages.TOO_SHORT.send(player, minLength);
+    // If there are no colors the length should be 0
+    String plainTextInput = PlainTextComponentSerializer.plainText()
+        .serialize(MiniMessage.get().parse(nickInput));
+    if (plainTextInput.length() > 0) {
+      NicksMessages.ONLY_COLOR_CODES.send(player);
       return true;
     }
 
-    // Make sure the nickname isn't too long
-    if (plainTextNick.length() > maxLength) {
-      NicksMessages.TOO_LONG.send(player, maxLength);
-      return true;
-    }
+    // Get the players current nickname to apply color codes to
+    String plainTextNick = PlainTextComponentSerializer.plainText().serialize(player.displayName());
+    Component nickname = MiniMessage.get().parse(nickInput + plainTextNick);
 
-    // Call event
-    SetNickEvent nickEvent = new SetNickEvent(player, nickname, player.displayName());
-    Nicks.api().callEvent(nickEvent);
-    if (nickEvent.isCancelled()) {
-      return true;
-    }
+    // TODO: 6/23/2021 Add event for nick color command
 
     // Set nick
-    Nicks.core().setNick(player, nickEvent.newNick());
-    NicksMessages.NICKNAME_SET.send(player, nickEvent.newNick());
+    Nicks.core().setNick(player, nickname);
+    NicksMessages.NICKNAME_SET.send(player, nickname);
 
     return true;
   }

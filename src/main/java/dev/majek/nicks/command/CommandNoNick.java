@@ -25,13 +25,13 @@
 package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
-import dev.majek.nicks.api.SetNickEvent;
+import dev.majek.nicks.api.NoNickEvent;
 import dev.majek.nicks.config.NicksMessages;
+import dev.majek.nicks.util.TabCompleterBase;
 import java.util.Collections;
 import java.util.List;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -39,72 +39,68 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles <code>/nick</code> command execution and tab completion.
+ * Handles <code>/nonick</code> command execution and tab completion.
  */
-public class CommandNick implements TabExecutor {
+public class CommandNoNick implements TabExecutor {
 
   @Override
   public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                            @NotNull String label, @NotNull String[] args) {
-    // Console cannot have a nickname
-    if (!(sender instanceof Player player)) {
-      NicksMessages.INVALID_SENDER.send(sender);
-      return true;
-    }
-
     if (args.length == 0) {
-      return false;
-    }
-
-    String nickInput = String.join(" ", args);
-
-    // Check if we're supporting legacy
-    if (Nicks.config().LEGACY_COLORS) {
-      nickInput = Nicks.utils().legacyToMini(nickInput);
-    }
-
-    Component nickname = MiniMessage.get().parse(nickInput);
-    String plainTextNick = PlainTextComponentSerializer.plainText().serialize(nickname);
-    int maxLength = Nicks.config().MAX_LENGTH;
-    int minLength = Nicks.config().MIN_LENGTH;
-
-    // Make sure the nickname is alphanumeric if that's enabled
-    if (Nicks.config().REQUIRE_ALPHANUMERIC) {
-      if (!plainTextNick.matches("[a-zA-Z0-9]+")) {
-        NicksMessages.NON_ALPHANUMERIC.send(player);
+      // Console has no nickname
+      if (!(sender instanceof Player player)) {
+        NicksMessages.INVALID_SENDER.send(sender);
         return true;
       }
+
+      // Call event
+      NoNickEvent noNickEvent = new NoNickEvent(player, player.displayName());
+      Nicks.api().callEvent(noNickEvent);
+      if (noNickEvent.isCancelled()) {
+        return true;
+      }
+
+      // Set nickname to player's name
+      player.displayName(Component.text(player.getName()));
+      if (Nicks.config().TAB_NICKS) {
+        player.playerListName(Component.text(player.getName()));
+      }
+      Nicks.core().removeNick(player.getUniqueId());
+      NicksMessages.NICKNAME_REMOVED.send(player);
+
+    } else {
+
+      // Make sure the sender has permission to remove another player's nickname
+      if (!sender.hasPermission("papernicks.nonick.other")) {
+        NicksMessages.NO_PERMISSION.send(sender);
+        return true;
+      }
+
+      // Make sure the target player is online
+      Player target = Bukkit.getPlayer(args[0]);
+      if (target == null) {
+        NicksMessages.UNKNOWN_PLAYER.send(sender, args[0]);
+        return true;
+      }
+
+      // Remove nickname
+      target.displayName(Component.text(target.getName()));
+      if (Nicks.config().TAB_NICKS) {
+        target.playerListName(Component.text(target.getName()));
+      }
+      Nicks.core().removeNick(target.getUniqueId());
+      NicksMessages.NICKNAME_REMOVED_OTHER.send(sender, target);
     }
-
-    // Make sure the nickname isn't too short
-    if (plainTextNick.length() < minLength) {
-      NicksMessages.TOO_SHORT.send(player, minLength);
-      return true;
-    }
-
-    // Make sure the nickname isn't too long
-    if (plainTextNick.length() > maxLength) {
-      NicksMessages.TOO_LONG.send(player, maxLength);
-      return true;
-    }
-
-    // Call event
-    SetNickEvent nickEvent = new SetNickEvent(player, nickname, player.displayName());
-    Nicks.api().callEvent(nickEvent);
-    if (nickEvent.isCancelled()) {
-      return true;
-    }
-
-    // Set nick
-    Nicks.core().setNick(player, nickEvent.newNick());
-    NicksMessages.NICKNAME_SET.send(player, nickEvent.newNick());
-
     return true;
   }
 
   @Override
   public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
-                                              @NotNull String label, @NotNull String[] args) {
-    return Collections.emptyList();
+                                    @NotNull String label, @NotNull String[] args) {
+    if (args.length == 1) {
+      return TabCompleterBase.getOnlinePlayers(args[0]);
+    } else {
+      return Collections.emptyList();
+    }
   }
 }

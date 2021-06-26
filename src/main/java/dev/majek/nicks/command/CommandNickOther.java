@@ -27,11 +27,13 @@ package dev.majek.nicks.command;
 import dev.majek.nicks.Nicks;
 import dev.majek.nicks.api.SetNickEvent;
 import dev.majek.nicks.config.NicksMessages;
+import dev.majek.nicks.util.TabCompleterBase;
 import java.util.Collections;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -39,24 +41,28 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles <code>/nick</code> command execution and tab completion.
+ * Handles <code>/nickother</code> command execution and tab completion.
  */
-public class CommandNick implements TabExecutor {
+public class CommandNickOther implements TabExecutor {
 
   @Override
   public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                            @NotNull String label, @NotNull String[] args) {
-    // Console cannot have a nickname
-    if (!(sender instanceof Player player)) {
-      NicksMessages.INVALID_SENDER.send(sender);
-      return true;
-    }
-
-    if (args.length == 0) {
+    if (args.length < 2) {
       return false;
     }
 
-    String nickInput = String.join(" ", args);
+    // Make sure the target player is online
+    Player target = Bukkit.getPlayer(args[0]);
+    if (target == null) {
+      NicksMessages.UNKNOWN_PLAYER.send(sender, args[0]);
+      return true;
+    }
+
+    // Remove first element of array and get the nickname input
+    String[] newArgs = new String[args.length - 1];
+    System.arraycopy(args, 1, newArgs, 0, args.length - 1);
+    String nickInput = String.join(" ", newArgs);
 
     // Check if we're supporting legacy
     if (Nicks.config().LEGACY_COLORS) {
@@ -71,33 +77,35 @@ public class CommandNick implements TabExecutor {
     // Make sure the nickname is alphanumeric if that's enabled
     if (Nicks.config().REQUIRE_ALPHANUMERIC) {
       if (!plainTextNick.matches("[a-zA-Z0-9]+")) {
-        NicksMessages.NON_ALPHANUMERIC.send(player);
+        NicksMessages.NON_ALPHANUMERIC.send(sender);
         return true;
       }
     }
 
     // Make sure the nickname isn't too short
     if (plainTextNick.length() < minLength) {
-      NicksMessages.TOO_SHORT.send(player, minLength);
+      NicksMessages.TOO_SHORT.send(sender, minLength);
       return true;
     }
 
     // Make sure the nickname isn't too long
     if (plainTextNick.length() > maxLength) {
-      NicksMessages.TOO_LONG.send(player, maxLength);
+      NicksMessages.TOO_LONG.send(sender, maxLength);
       return true;
     }
 
+
     // Call event
-    SetNickEvent nickEvent = new SetNickEvent(player, nickname, player.displayName());
+    // TODO: 6/21/2021 Create new SetNickOtherEvent for this command
+    SetNickEvent nickEvent = new SetNickEvent(target, nickname, target.displayName());
     Nicks.api().callEvent(nickEvent);
     if (nickEvent.isCancelled()) {
       return true;
     }
 
     // Set nick
-    Nicks.core().setNick(player, nickEvent.newNick());
-    NicksMessages.NICKNAME_SET.send(player, nickEvent.newNick());
+    Nicks.core().setNick(target, nickEvent.newNick());
+    NicksMessages.NICKNAME_SET_OTHER.send(sender, target, nickEvent.newNick());
 
     return true;
   }
@@ -105,6 +113,10 @@ public class CommandNick implements TabExecutor {
   @Override
   public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                               @NotNull String label, @NotNull String[] args) {
-    return Collections.emptyList();
+    if (args.length == 1) {
+      return TabCompleterBase.getOnlinePlayers(args[0]);
+    } else {
+      return Collections.emptyList();
+    }
   }
 }

@@ -21,24 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package dev.majek.nicks;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import dev.majek.nicks.api.NicksApi;
+import dev.majek.nicks.event.ChatFormatter;
 import dev.majek.nicks.command.CommandNick;
+import dev.majek.nicks.command.CommandNickColor;
+import dev.majek.nicks.command.CommandNickOther;
+import dev.majek.nicks.command.CommandNoNick;
 import dev.majek.nicks.config.ConfigUpdater;
 import dev.majek.nicks.config.JsonConfig;
+import dev.majek.nicks.config.NicksConfig;
+import dev.majek.nicks.event.PlayerJoin;
 import dev.majek.nicks.util.NicksUtils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.ApiStatus.Internal;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -46,6 +44,18 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * <p>Main plugin class.</p>
@@ -56,15 +66,20 @@ public final class Nicks extends JavaPlugin {
 
   private static Nicks core;
   private static NicksApi api;
-  private final NicksUtils utils;
+  private static NicksUtils utils;
+  private static NicksConfig config;
   private final JsonConfig storage;
   private final Map<UUID, Component> nickMap;
   private boolean debug;
 
+  /**
+   * Initialize plugin.
+   */
   public Nicks() {
     core = this;
     api = new NicksApi();
     utils = new NicksUtils();
+    config = new NicksConfig();
     storage = new JsonConfig(getDataFolder(), "nicknames.json");
     try {
       storage.createConfig();
@@ -75,6 +90,9 @@ public final class Nicks extends JavaPlugin {
     nickMap = new HashMap<>();
   }
 
+  /**
+   * Plugin startup logic.
+   */
   @Override
   public void onEnable() {
     // Initialize configuration file
@@ -83,12 +101,20 @@ public final class Nicks extends JavaPlugin {
     // Load nicknames from storage
     try {
       JsonObject jsonObject = storage.toJsonObject();
-      for (String key : jsonObject.keySet())
-        nickMap.put(UUID.fromString(key), GsonComponentSerializer.gson().deserializeFromTree(jsonObject.get(key)));
+      for (String key : jsonObject.keySet()) {
+        nickMap.put(UUID.fromString(key), GsonComponentSerializer.gson()
+            .deserializeFromTree(jsonObject.get(key)));
+      }
     } catch (IOException e) {
       error("Error loading nickname data from nicknames.json file:");
       e.printStackTrace();
     }
+
+    // Register plugin commands
+    registerCommands();
+
+    // Register events
+    registerEvents(new PlayerJoin(), new ChatFormatter());
   }
 
   /**
@@ -98,6 +124,21 @@ public final class Nicks extends JavaPlugin {
   private void registerCommands() {
     getCommand("nick").setExecutor(new CommandNick());
     getCommand("nick").setTabCompleter(new CommandNick());
+    getCommand("nonick").setExecutor(new CommandNoNick());
+    getCommand("nonick").setTabCompleter(new CommandNoNick());
+    getCommand("nickother").setExecutor(new CommandNickOther());
+    getCommand("nickother").setTabCompleter(new CommandNickOther());
+    getCommand("nickcolor").setExecutor(new CommandNickColor());
+    getCommand("nickcolor").setTabCompleter(new CommandNickColor());
+  }
+
+  /**
+   * Register plugin events.
+   */
+  private void registerEvents(Listener... listeners) {
+    for (Listener listener : listeners) {
+      getServer().getPluginManager().registerEvents(listener, this);
+    }
   }
 
   /**
@@ -119,6 +160,24 @@ public final class Nicks extends JavaPlugin {
   }
 
   /**
+   * Access various utility methods used in the plugin.
+   *
+   * @return NicksUtils.
+   */
+  public static NicksUtils utils() {
+    return utils;
+  }
+
+  /**
+   * Easier access for plugin config options with defaults for redundancy.
+   *
+   * @return NicksConfig.
+   */
+  public static NicksConfig config() {
+    return config;
+  }
+
+  /**
    * Log an object to console. This should be a non-critical message.
    *
    * @param x Object to log.
@@ -133,8 +192,9 @@ public final class Nicks extends JavaPlugin {
    * @param x Object to log.
    */
   public static void debug(@NotNull Object x) {
-    if (core().debug)
+    if (core().debug) {
       core().getLogger().warning(x.toString());
+    }
   }
 
   /**
@@ -150,6 +210,7 @@ public final class Nicks extends JavaPlugin {
    * Reload the plugin's configuration file.
    */
   public void reload() {
+    debug("Reloading plugin...");
     saveDefaultConfig();
     File configFile = new File(core().getDataFolder(), "config.yml");
     try {
@@ -162,12 +223,12 @@ public final class Nicks extends JavaPlugin {
   }
 
   /**
-   * Access various utility methods used in the plugin.
+   * Get the map that stores unique ids keyed to nicknames.
    *
-   * @return NicksUtils.
+   * @return NickMap.
    */
-  public NicksUtils utils() {
-    return utils;
+  public Map<UUID, Component> getNickMap() {
+    return nickMap;
   }
 
   /**
@@ -214,40 +275,46 @@ public final class Nicks extends JavaPlugin {
   }
 
   /**
-   * Set a user's nickname from their unique id. This will immediately be saved to Json.
-   *
-   * @param uuid User's unique id.
-   * @param nick User's new nickname.
-   */
-  public void setNick(@NotNull UUID uuid, @NotNull Component nick) {
-    nickMap.put(uuid, nick);
-    saveNick(uuid);
-  }
-
-  /**
-   * Set a user's nickname using an online {@link Player}. This will immediately be saved to Json.
+   * Set a user's nickname using an online {@link Player}.
+   * This will immediately be saved to Json.
    *
    * @param player Online player.
    * @param nick Player's new nickname.
    */
   public void setNick(@NotNull Player player, @NotNull Component nick) {
-    setNick(player.getUniqueId(), nick);
+    nick = Component.empty().color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false).append(nick);
+    nickMap.put(player.getUniqueId(), nick);
+    player.displayName(nick);
+    if (config().TAB_NICKS) {
+      player.playerListName(nick);
+    }
+    saveNick(player.getUniqueId());
   }
 
   /**
-   * Set a user's nickname using an {@link OfflinePlayer}. This will immediately be saved to Json.
+   * Remove a nickname from the map and from Json storage.
+   * It will be asynchronously removed from the file.
    *
-   * @param player OfflinePlayer.
-   * @param nick Player's new nickname.
+   * @param uuid The unique id to remove.
    */
-  public void setNick(@NotNull OfflinePlayer player, @NotNull Component nick) {
-    setNick(player.getUniqueId(), nick);
+  public void removeNick(@NotNull UUID uuid) {
+    nickMap.remove(uuid);
+    Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+      try {
+        storage.removeFromJsonObject(uuid.toString());
+        debug("Removed nickname from user " + uuid + " from json.");
+      } catch (IOException e) {
+        error("Error removing nickname from file \nUUID: " + uuid);
+        e.printStackTrace();
+      }
+    });
   }
 
   /**
-   * Save nickname to Json from a unique id. Primarily used internally. All <code>setNick(...)</code>
-   * methods will call this after saving the nickname to the map. If this is called using a unique id
-   * not in the map an error will be thrown.
+   * Save nickname to Json from a unique id. Primarily used internally.
+   * All <code>setNick(...)</code> methods will call this after saving
+   * the nickname to the map. If this is called using a unique id not
+   * in the map an error will be thrown.
    *
    * @param uuid Unique id of user who's nickname is being saved.
    * @throws NullPointerException Will be thrown if the unique id is not in the map.
@@ -257,9 +324,11 @@ public final class Nicks extends JavaPlugin {
   public void saveNick(@NotNull UUID uuid) throws NullPointerException {
     Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
       try {
-        storage.putInJsonObject(uuid.toString(), GsonComponentSerializer.gson().serialize(getNick(uuid)));
+        storage.putInJsonObject(uuid.toString(),
+            JsonParser.parseString(GsonComponentSerializer.gson().serialize(getNick(uuid))));
+        debug("Saved nickname from user " + uuid + " to json.");
       } catch (IOException e) {
-        error("Error saving nickname to file: \nUUID: " + uuid);
+        error("Error saving nickname to file \nUUID: " + uuid);
         e.printStackTrace();
       }
     });

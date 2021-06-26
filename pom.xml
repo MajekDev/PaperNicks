@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>dev.majek</groupId>
+    <groupId>dev.majek.nicks</groupId>
     <artifactId>Nicks</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
@@ -13,9 +13,23 @@
 
     <description>Nickname plugin designed to run on the newest PaperMC.</description>
     <properties>
-        <maven.compiler.release>11</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <distributionManagement>
+        <repository>
+            <id>majek-repo</id>
+            <name>Majekdor repository</name>
+            <url>https://repo.majek.dev/releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>apache.snapshots</id>
+            <url>https://repository.apache.org/snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <build>
         <plugins>
@@ -24,13 +38,14 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <release>11</release>
+                    <source>16</source>
+                    <target>16</target>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.3.0-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -38,10 +53,30 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <artifactSet>
+                                <includes>
+                                    <include>net.kyori:adventure-text-minimessage</include>
+                                    <include>net.kyori:adventure-text-serializer-plain</include>
+                                    <include>net.kyori:adventure-text-serializer-gson</include>
+                                    <include>com.google.code.gson</include>
+                                    <include>org.checkerframework</include>
+                                    <include>org.intellij</include>
+                                    <include>org.jetbrains</include>
+                                    <include>org.bstats</include>
+                                </includes>
+                            </artifactSet>
                             <relocations>
                                 <relocation>
-                                    <pattern>net.kyori</pattern>
-                                    <shadedPattern>dev.majek.relocations.net.kyori</shadedPattern>
+                                    <pattern>net.kyori.adventure.text.minimessage</pattern>
+                                    <shadedPattern>dev.majek.relocations.net.kyori.adventure.text.minimessage</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.kyori.adventure.text.serializer.plain</pattern>
+                                    <shadedPattern>dev.majek.relocations.net.kyori.adventure.text.serializer.plain</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>net.kyori.adventure.text.serializer.gson</pattern>
+                                    <shadedPattern>dev.majek.relocations.net.kyori.adventure.text.serializer.gson</shadedPattern>
                                 </relocation>
                                 <relocation>
                                     <pattern>com.google</pattern>
@@ -81,7 +116,7 @@
 
     <repositories>
         <repository>
-            <id>papermc-repo</id>
+            <id>papermc</id>
             <url>https://papermc.io/repo/repository/maven-public/</url>
         </repository>
         <repository>
@@ -97,9 +132,9 @@
     <dependencies>
         <!-- PaperMC API -->
         <dependency>
-            <groupId>com.destroystokyo.paper</groupId>
+            <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <version>1.17-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
         <!-- Adventure MiniMessage -->
@@ -107,6 +142,20 @@
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
             <version>4.1.0-SNAPSHOT</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Adventure Plain Text Serializer -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-plain</artifactId>
+            <version>4.8.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Adventure Gson Serializer -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-gson</artifactId>
+            <version>4.8.1</version>
             <scope>compile</scope>
         </dependency>
         <!-- Gson -->

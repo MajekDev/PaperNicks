@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package dev.majek.nicks.config;
 
 import com.google.gson.*;
-
 import java.io.*;
 
 /**
@@ -35,6 +35,7 @@ public class JsonConfig {
   private final File configFile;
   private final File pluginDataFolder;
   private final String name;
+  private final Gson gson;
 
   /**
    * Please notice that the constructor does not yet create the JSON configuration file.
@@ -47,10 +48,12 @@ public class JsonConfig {
     this.name = name;
     this.configFile = new File(pluginDataFolder, this.name);
     this.pluginDataFolder = pluginDataFolder;
+    this.gson = new GsonBuilder().setPrettyPrinting().create();
   }
 
   /**
-   * This creates the configuration file. If the data folder is invalid, it will be created along with the config file.
+   * This creates the configuration file. If the data folder is invalid,
+   * it will be created along with the config file.
    */
   public void createConfig() throws FileNotFoundException {
     if (!configFile.exists()) {
@@ -62,9 +65,10 @@ public class JsonConfig {
       } catch (IOException e) {
         e.printStackTrace();
       }
-      PrintWriter write = new PrintWriter(configFile);
-      write.write("{ }");
-      write.close();
+      PrintWriter writer = new PrintWriter(configFile);
+      writer.write("{ }");
+      writer.flush();
+      writer.close();
     }
   }
 
@@ -115,11 +119,11 @@ public class JsonConfig {
     this.deleteFile();
     try {
       IGNORE_RESULT(configFile.createNewFile());
-      Gson gson = new GsonBuilder().setPrettyPrinting().create();
       JsonElement je = JsonParser.parseString("{}");
-      PrintWriter write = new PrintWriter(configFile);
-      write.write(gson.toJson(je));
-      write.close();
+      PrintWriter writer = new PrintWriter(configFile);
+      writer.write(gson.toJson(je));
+      writer.flush();
+      writer.close();
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -153,44 +157,91 @@ public class JsonConfig {
     IGNORE_RESULT(subDir.mkdir());
   }
 
-  public JsonObject toJsonObject() throws IOException, JsonParseException {
+  /**
+   * Get the whole file as a JsonObject.
+   *
+   * @return File as JsonObject.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public JsonObject toJsonObject() throws FileNotFoundException {
     return (JsonObject) JsonParser.parseReader(new FileReader(configFile));
   }
 
-  public void putInJsonObject(String k, JsonElement v) throws IOException, JsonParseException {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  /**
+   * Add a key and a JsonElement value to Json.
+   *
+   * @param k The key.
+   * @param v The value.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public void putInJsonObject(String k, JsonElement v) throws FileNotFoundException {
     JsonObject obj = (JsonObject) JsonParser.parseReader(new FileReader(configFile));
     obj.add(k, v);
-    PrintWriter write = new PrintWriter(configFile);
-    write.write(gson.toJson(obj));
-    write.close();
+    saveUpdatedJson(obj);
   }
 
-  public void putInJsonObject(String k, String v) throws IOException, JsonParseException {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  /**
+   * Add a key and a string value to Json.
+   *
+   * @param k The key.
+   * @param v The value.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public void putInJsonObject(String k, String v) throws FileNotFoundException {
     JsonObject obj = (JsonObject) JsonParser.parseReader(new FileReader(configFile));
     obj.addProperty(k, v);
-    PrintWriter write = new PrintWriter(configFile);
-    write.write(gson.toJson(obj));
-    write.close();
+    saveUpdatedJson(obj);
   }
 
-  public void putInJsonObject(String k, int v) throws IOException, JsonParseException {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  /**
+   * Add a key and an integer value to Json.
+   *
+   * @param k The key.
+   * @param v The value.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public void putInJsonObject(String k, Integer v) throws FileNotFoundException {
     JsonObject obj = (JsonObject) JsonParser.parseReader(new FileReader(configFile));
     obj.addProperty(k, v);
-    PrintWriter write = new PrintWriter(configFile);
-    write.write(gson.toJson(obj));
-    write.close();
+    saveUpdatedJson(obj);
   }
 
-  public void removeFromJsonObject(String key) throws IOException, JsonParseException {
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  /**
+   * Add a key and a boolean value to Json.
+   *
+   * @param k The key.
+   * @param v The value.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public void putInJsonObject(String k, Boolean v) throws FileNotFoundException {
+    JsonObject obj = (JsonObject) JsonParser.parseReader(new FileReader(configFile));
+    obj.addProperty(k, v);
+    saveUpdatedJson(obj);
+  }
+
+  /**
+   * Remove a key and it's value from Json.
+   *
+   * @param key The key to remove.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  public void removeFromJsonObject(String key) throws FileNotFoundException {
     JsonObject obj = (JsonObject) JsonParser.parseReader(new FileReader(configFile));
     obj.remove(key);
-    PrintWriter write = new PrintWriter(configFile);
-    write.write(gson.toJson(obj));
-    write.close();
+    saveUpdatedJson(obj);
+  }
+
+  /**
+   * Save the updated JsonObject to the file.
+   *
+   * @param object The object to save.
+   * @throws FileNotFoundException if the file is not found.
+   */
+  private void saveUpdatedJson(JsonObject object) throws FileNotFoundException {
+    PrintWriter writer = new PrintWriter(configFile);
+    writer.write(gson.toJson(object));
+    writer.flush();
+    writer.close();
   }
 
   /**

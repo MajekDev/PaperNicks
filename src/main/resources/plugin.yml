@@ -13,11 +13,15 @@ commands:
   nickother:
     description: Change the nickname of another player.
     usage: /nickother <player> <nickname>
-    permission: papernicks.nickother
+    permission: papernicks.nick.other
   nonick:
     description: Remove your nickname entirely.
     usage: /nonick [player]
     permission: papernicks.nonick
+  nickcolor:
+    description: Change the color of your nickname.
+    usage: /nickcolor <color>
+    permission: papernicks.nickcolor
   nicksreload:
     description: Reload the plugin.
     usage: /nicksreload
@@ -36,6 +40,9 @@ permissions:
   papernicks.nonick.other:
     description: Permission to remove other player's nicknames.
     default: op
+  papernicks.nickcolor:
+    description: Permission to change color of nickname.
+    default: true
   papernicks.reload:
     description: Permission to reload the plugin.
     default: op
