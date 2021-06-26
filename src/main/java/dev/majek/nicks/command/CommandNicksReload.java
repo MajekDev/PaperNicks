@@ -22,26 +22,33 @@
  * SOFTWARE.
  */
 
-package dev.majek.nicks.event;
+package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
-import java.util.Objects;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
+import dev.majek.nicks.config.NicksMessages;
+import java.util.Collections;
+import java.util.List;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
+import org.jetbrains.annotations.NotNull;
 
 /**
- * <p>Handles the player join event.</p>
- * <p>Sets the player displayname if they have a nickname in the map.</p>
+ * Handles <code>/nicksreload</code> command execution and tab completion.
  */
-public class PlayerJoin implements Listener {
+public class CommandNicksReload implements TabExecutor {
 
-  @EventHandler(priority = EventPriority.HIGHEST)
-  public void onPlayerJoin(PlayerJoinEvent event) {
-    if (Nicks.core().hasNick(event.getPlayer().getUniqueId())) {
-      Nicks.core().setNick(event.getPlayer(), Objects.requireNonNull(Nicks.core()
-          .getNick(event.getPlayer().getUniqueId())));
-    }
+  @Override
+  public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
+                           @NotNull String label, @NotNull String[] args) {
+    Nicks.core().reload();
+    NicksMessages.PLUGIN_RELOADED.send(sender);
+    return true;
+  }
+
+  @Override
+  public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
+                                              @NotNull String alias, @NotNull String[] args) {
+    return Collections.emptyList();
   }
 }

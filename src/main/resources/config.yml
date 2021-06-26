@@ -12,7 +12,7 @@ min-length: 3
 # Whether or not nicknames must be alphanumeric - Regex: [a-zA-Z0-9]+
 require-alphanumeric: true
 
-# The plugin requires a chat formatter for nicknames to format properly in chat
+# The plugin needs a chat formatter for nicknames to format properly in chat
 # PaperNicks can do this itself but if you have another formatter such as EssentialsChat or VaultChatFormatter you should disable this
 chat-formatter: true
 
@@ -39,3 +39,4 @@ messages:
   nicknameRemoved: "<gray>Nickname removed."
   nicknameRemovedOther: "<aqua>%player%<gray>'s nickname removed."
   onlyColorCodes: "<red>You may only include color codes."
+  pluginReloaded: "<gray>Plugin reloaded."

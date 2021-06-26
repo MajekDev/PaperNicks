@@ -25,6 +25,7 @@
 package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
+import dev.majek.nicks.api.NickColorEvent;
 import dev.majek.nicks.config.NicksMessages;
 import java.util.Collections;
 import java.util.List;
@@ -74,11 +75,16 @@ public class CommandNickColor implements TabExecutor {
     String plainTextNick = PlainTextComponentSerializer.plainText().serialize(player.displayName());
     Component nickname = MiniMessage.get().parse(nickInput + plainTextNick);
 
-    // TODO: 6/23/2021 Add event for nick color command
+    // Call event
+    NickColorEvent colorEvent = new NickColorEvent(player, nickname, player.displayName());
+    Nicks.api().callEvent(colorEvent);
+    if (colorEvent.isCancelled()) {
+      return true;
+    }
 
     // Set nick
-    Nicks.core().setNick(player, nickname);
-    NicksMessages.NICKNAME_SET.send(player, nickname);
+    Nicks.core().setNick(player, colorEvent.newNick());
+    NicksMessages.NICKNAME_SET.send(player, colorEvent.newNick());
 
     return true;
   }

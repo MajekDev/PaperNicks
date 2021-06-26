@@ -32,6 +32,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,5 +73,38 @@ public class NicksApi {
       }
     }
     return null;
+  }
+
+  /**
+   * Get a nickname from a player's unique id.
+   *
+   * @param uuid The unique id.
+   * @return Nickname if it exists.
+   */
+  @Nullable
+  public Component getNick(@NotNull UUID uuid) {
+    return Nicks.core().getNick(uuid);
+  }
+
+  /**
+   * Get a nickname from an online {@link Player}.
+   *
+   * @param player Player.
+   * @return Nickname if it exists.
+   */
+  @Nullable
+  public Component getNick(@NotNull Player player) {
+    return Nicks.core().getNick(player.getUniqueId());
+  }
+
+  /**
+   * Get a nickname from an {@link OfflinePlayer}.
+   *
+   * @param player OfflinePlayer.
+   * @return Nickname if it exists.
+   */
+  @Nullable
+  public Component getNick(@NotNull OfflinePlayer player) {
+    return Nicks.core().getNick(player.getUniqueId());
   }
 }

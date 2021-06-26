@@ -25,7 +25,7 @@
 package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
-import dev.majek.nicks.api.SetNickEvent;
+import dev.majek.nicks.api.SetNickOtherEvent;
 import dev.majek.nicks.config.NicksMessages;
 import dev.majek.nicks.util.TabCompleterBase;
 import java.util.Collections;
@@ -96,8 +96,8 @@ public class CommandNickOther implements TabExecutor {
 
 
     // Call event
-    // TODO: 6/21/2021 Create new SetNickOtherEvent for this command
-    SetNickEvent nickEvent = new SetNickEvent(target, nickname, target.displayName());
+    SetNickOtherEvent nickEvent = new SetNickOtherEvent(sender, target,
+        nickname, target.displayName());
     Nicks.api().callEvent(nickEvent);
     if (nickEvent.isCancelled()) {
       return true;

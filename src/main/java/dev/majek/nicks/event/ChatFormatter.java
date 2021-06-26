@@ -37,13 +37,19 @@ import org.bukkit.event.Listener;
  */
 public class ChatFormatter implements Listener {
 
-  @EventHandler(priority = EventPriority.LOWEST) // Allow other plugins to change this
+  /**
+   * Fires on chat to format. Lowest priority to allow other plugins to modify over us.
+   *
+   * @param event AsyncChatEvent.
+   */
+  @EventHandler(priority = EventPriority.LOWEST)
   public void onChat(AsyncChatEvent event) {
-    if (Nicks.config().CHAT_FORMATTER)
+    if (Nicks.config().CHAT_FORMATTER) {
       event.renderer((source, sourceDisplayName, message, viewer) -> MiniMessage.get()
           .parse(Nicks.config().CHAT_FORMAT).replaceText(TextReplacementConfig.builder()
               .matchLiteral("{displayname}").replacement(sourceDisplayName).build())
           .replaceText(TextReplacementConfig.builder().matchLiteral("{message}")
               .replacement(message).build()));
+    }
   }
 }

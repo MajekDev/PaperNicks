@@ -27,11 +27,8 @@ package dev.majek.nicks;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.majek.nicks.api.NicksApi;
+import dev.majek.nicks.command.*;
 import dev.majek.nicks.event.ChatFormatter;
-import dev.majek.nicks.command.CommandNick;
-import dev.majek.nicks.command.CommandNickColor;
-import dev.majek.nicks.command.CommandNickOther;
-import dev.majek.nicks.command.CommandNoNick;
 import dev.majek.nicks.config.ConfigUpdater;
 import dev.majek.nicks.config.JsonConfig;
 import dev.majek.nicks.config.NicksConfig;
@@ -49,7 +46,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -64,13 +60,12 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class Nicks extends JavaPlugin {
 
-  private static Nicks core;
-  private static NicksApi api;
-  private static NicksUtils utils;
-  private static NicksConfig config;
-  private final JsonConfig storage;
-  private final Map<UUID, Component> nickMap;
-  private boolean debug;
+  private static Nicks                core;
+  private static NicksApi             api;
+  private static NicksUtils           utils;
+  private static NicksConfig          config;
+  private final JsonConfig            storage;
+  private final Map<UUID, Component>  nickMap;
 
   /**
    * Initialize plugin.
@@ -109,6 +104,7 @@ public final class Nicks extends JavaPlugin {
       error("Error loading nickname data from nicknames.json file:");
       e.printStackTrace();
     }
+    log("Successfully loaded nicknames from Json storage.");
 
     // Register plugin commands
     registerCommands();
@@ -130,6 +126,8 @@ public final class Nicks extends JavaPlugin {
     getCommand("nickother").setTabCompleter(new CommandNickOther());
     getCommand("nickcolor").setExecutor(new CommandNickColor());
     getCommand("nickcolor").setTabCompleter(new CommandNickColor());
+    getCommand("nicksreload").setExecutor(new CommandNicksReload());
+    getCommand("nicksreload").setTabCompleter(new CommandNicksReload());
   }
 
   /**
@@ -192,7 +190,7 @@ public final class Nicks extends JavaPlugin {
    * @param x Object to log.
    */
   public static void debug(@NotNull Object x) {
-    if (core().debug) {
+    if (config().DEBUG) {
       core().getLogger().warning(x.toString());
     }
   }
@@ -219,7 +217,7 @@ public final class Nicks extends JavaPlugin {
       e.printStackTrace();
     }
     reloadConfig();
-    debug = getConfig().getBoolean("debug", false);
+    config().reload();
   }
 
   /**
@@ -253,28 +251,6 @@ public final class Nicks extends JavaPlugin {
   }
 
   /**
-   * Get a nickname from an online {@link Player}.
-   *
-   * @param player Player.
-   * @return Nickname if it exists.
-   */
-  @Nullable
-  public Component getNick(@NotNull Player player) {
-    return getNick(player.getUniqueId());
-  }
-
-  /**
-   * Get a nickname from an {@link OfflinePlayer}.
-   *
-   * @param player OfflinePlayer.
-   * @return Nickname if it exists.
-   */
-  @Nullable
-  public Component getNick(@NotNull OfflinePlayer player) {
-    return getNick(player.getUniqueId());
-  }
-
-  /**
    * Set a user's nickname using an online {@link Player}.
    * This will immediately be saved to Json.
    *
@@ -282,7 +258,8 @@ public final class Nicks extends JavaPlugin {
    * @param nick Player's new nickname.
    */
   public void setNick(@NotNull Player player, @NotNull Component nick) {
-    nick = Component.empty().color(NamedTextColor.WHITE).decoration(TextDecoration.BOLD, false).append(nick);
+    nick = Component.empty().color(NamedTextColor.WHITE)
+        .decoration(TextDecoration.BOLD, false).append(nick);
     nickMap.put(player.getUniqueId(), nick);
     player.displayName(nick);
     if (config().TAB_NICKS) {

@@ -25,51 +25,87 @@
 package dev.majek.nicks.api;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * Handles the event fired when a player removes their nickname.
+ * Handles the event fired when a player sets another player's nickname.
  */
-public class NoNickEvent extends Event implements Cancellable {
+public class SetNickOtherEvent extends Event implements Cancellable {
 
   private static final HandlerList HANDLER_LIST = new HandlerList();
-  private final Player player;
+  private final CommandSender setter;
+  private final Player target;
   private final Component oldNick;
+  private Component newNick;
   private boolean canceled;
 
   /**
-   * Fires when a player removes their nickname using <code>/nonick</code>.
+   * Fires when a player changes another player's nickname using <code>/nick</code>.
    *
-   * @param player  The in-game player changing the nickname.
-   * @param oldNick The player's old nickname being removed.
+   * @param setter  The {@link CommandSender} changing the target's nickname.
+   * @param target  The player who's nickname is being changed.
+   * @param newNick The new nickname the setter is attempting to set.
+   * @param oldNick The target's old name if they had one.
    */
-  public NoNickEvent(@NotNull Player player, @NotNull Component oldNick) {
-    this.player = player;
+  public SetNickOtherEvent(@NotNull CommandSender setter, @NotNull Player target,
+                           @NotNull Component newNick, @Nullable Component oldNick) {
+    this.setter = setter;
+    this.target = target;
+    this.newNick = newNick;
     this.oldNick = oldNick;
     this.canceled = false;
   }
 
   /**
-   * The in-game player attempting to change the nickname.
+   * The {@link CommandSender} changing the {@link #target()}'s nickname.
    *
-   * @return Player.
+   * @return Setter.
    */
-  public Player player() {
-    return player;
+  public CommandSender setter() {
+    return setter;
   }
 
   /**
-   * The old nickname being removed.
+   * The in-game player who's nickname is being changed by the {@link #setter()}.
+   *
+   * @return Target
+   */
+  public Player target() {
+    return target;
+  }
+
+  /**
+   * The old nickname if the player had one previously.
    *
    * @return Old nickname.
    */
-  @NotNull
+  @Nullable
   public Component oldNick() {
     return oldNick;
+  }
+
+  /**
+   * Set the player's new nickname.
+   *
+   * @param newNick New nickname.
+   */
+  public void newNick(@NotNull Component newNick) {
+    this.newNick = newNick;
+  }
+
+  /**
+   * The new nickname the player is attempting to set.
+   *
+   * @return New nickname.
+   */
+  public Component newNick() {
+    return newNick;
   }
 
   /**

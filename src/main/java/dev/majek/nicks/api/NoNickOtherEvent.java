@@ -25,6 +25,7 @@
 package dev.majek.nicks.api;
 
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -32,34 +33,46 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles the event fired when a player removes their nickname.
+ * Handles the event fired when a player removes another player's nickname.
  */
-public class NoNickEvent extends Event implements Cancellable {
+public class NoNickOtherEvent extends Event implements Cancellable {
 
   private static final HandlerList HANDLER_LIST = new HandlerList();
-  private final Player player;
+  private final CommandSender deleter;
+  private final Player target;
   private final Component oldNick;
   private boolean canceled;
 
   /**
-   * Fires when a player removes their nickname using <code>/nonick</code>.
+   * Fires when a player removes another player's nickname using <code>/nonick</code>.
    *
-   * @param player  The in-game player changing the nickname.
+   * @param deleter The player or console removing the player's nickname.
    * @param oldNick The player's old nickname being removed.
    */
-  public NoNickEvent(@NotNull Player player, @NotNull Component oldNick) {
-    this.player = player;
+  public NoNickOtherEvent(@NotNull CommandSender deleter, @NotNull Player target,
+                          @NotNull Component oldNick) {
+    this.deleter = deleter;
+    this.target = target;
     this.oldNick = oldNick;
     this.canceled = false;
   }
 
   /**
-   * The in-game player attempting to change the nickname.
+   * The {@link CommandSender} removing the {@link #target()}'s nickname.
    *
-   * @return Player.
+   * @return Deleter.
    */
-  public Player player() {
-    return player;
+  public CommandSender deleter() {
+    return deleter;
+  }
+
+  /**
+   * The in-fame player who's nickname is being removed by {@link #deleter()}.
+   *
+   * @return Target.
+   */
+  public Player target() {
+    return target;
   }
 
   /**

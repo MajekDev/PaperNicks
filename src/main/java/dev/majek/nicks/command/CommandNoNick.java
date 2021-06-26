@@ -26,6 +26,7 @@ package dev.majek.nicks.command;
 
 import dev.majek.nicks.Nicks;
 import dev.majek.nicks.api.NoNickEvent;
+import dev.majek.nicks.api.NoNickOtherEvent;
 import dev.majek.nicks.config.NicksMessages;
 import dev.majek.nicks.util.TabCompleterBase;
 import java.util.Collections;
@@ -80,6 +81,13 @@ public class CommandNoNick implements TabExecutor {
       Player target = Bukkit.getPlayer(args[0]);
       if (target == null) {
         NicksMessages.UNKNOWN_PLAYER.send(sender, args[0]);
+        return true;
+      }
+
+      // Call event
+      NoNickOtherEvent event = new NoNickOtherEvent(sender, target, target.displayName());
+      Nicks.api().callEvent(event);
+      if (event.isCancelled()) {
         return true;
       }
 
