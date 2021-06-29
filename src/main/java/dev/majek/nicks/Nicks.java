@@ -45,6 +45,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -105,6 +106,9 @@ public final class Nicks extends JavaPlugin {
       e.printStackTrace();
     }
     log("Successfully loaded nicknames from Json storage.");
+
+    // Track metrics
+    new Metrics(this, 11860);
 
     // Register plugin commands
     registerCommands();

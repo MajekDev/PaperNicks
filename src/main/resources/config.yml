@@ -1,4 +1,5 @@
 # Config file for PaperNicks by Majekdor | Have questions? Ask here: https://discord.majek.dev
+# For colors this config uses MiniMessage (https://docs.adventure.kyori.net/minimessage.html#the-components)
 
 # Whether or not nicknames should show in the tab list
 tab-nicks: false
@@ -39,4 +40,4 @@ messages:
   nicknameRemoved: "<gray>Nickname removed."
   nicknameRemovedOther: "<aqua>%player%<gray>'s nickname removed."
   onlyColorCodes: "<red>You may only include color codes."
-  pluginReloaded: "<gray>Plugin reloaded."
+  pluginReloaded: "<green>Plugin reloaded."

@@ -80,7 +80,7 @@ public interface NicksMessages {
       .getString("messages.onlyColorCodes", "<red>You may only include color codes."));
 
   Args0 PLUGIN_RELOADED = () -> MiniMessage.get().parse(Nicks.core().getConfig()
-      .getString("messages.pluginReloaded", "<gray>Plugin reloaded."));
+      .getString("messages.pluginReloaded", "<green>Plugin reloaded."));
 
   interface Args0 {
     Component build();
