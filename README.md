@@ -20,7 +20,7 @@ There are 5 plugin commands:
 - `papernicks.nickcolor` - Permission to change your nickname color.
 - `papernicks.reload` - Permission to reload the plugin.
 
-## For the nerds... I meean devs :P
+## For the nerds... I mean devs :P
 
 PaperNicks does have an api and all commands trigger an event when executed. These events can be listened to the same way as other Bukkit events. You can see the events [here](https://github.com/Majekdor/PaperNicks/tree/master/src/main/java/dev/majek/nicks/api). No JavaDocs yet.
 
