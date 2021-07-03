@@ -82,6 +82,9 @@ public interface NicksMessages {
   Args0 PLUGIN_RELOADED = () -> MiniMessage.get().parse(Nicks.core().getConfig()
       .getString("messages.pluginReloaded", "<green>Plugin reloaded."));
 
+  /**
+   * A message that has no arguments that need to be replaced.
+   */
   interface Args0 {
     Component build();
 
@@ -90,6 +93,9 @@ public interface NicksMessages {
     }
   }
 
+  /**
+   * A message that has one argument that needs to be replaced.
+   */
   interface Args1<A0> {
     Component build(A0 arg0);
 
@@ -98,6 +104,9 @@ public interface NicksMessages {
     }
   }
 
+  /**
+   * A message that has two arguments that need to be replaced.
+   */
   interface Args2<A0, A1> {
     Component build(A0 arg0, A1 arg1);
 

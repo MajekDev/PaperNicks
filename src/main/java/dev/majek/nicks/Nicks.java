@@ -27,11 +27,15 @@ package dev.majek.nicks;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.majek.nicks.api.NicksApi;
-import dev.majek.nicks.command.*;
-import dev.majek.nicks.event.ChatFormatter;
+import dev.majek.nicks.command.CommandNick;
+import dev.majek.nicks.command.CommandNickColor;
+import dev.majek.nicks.command.CommandNickOther;
+import dev.majek.nicks.command.CommandNicksReload;
+import dev.majek.nicks.command.CommandNoNick;
 import dev.majek.nicks.config.ConfigUpdater;
 import dev.majek.nicks.config.JsonConfig;
 import dev.majek.nicks.config.NicksConfig;
+import dev.majek.nicks.event.ChatFormatter;
 import dev.majek.nicks.event.PlayerJoin;
 import dev.majek.nicks.util.NicksUtils;
 import java.io.File;
@@ -46,6 +50,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SimplePie;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -67,6 +72,7 @@ public final class Nicks extends JavaPlugin {
   private static NicksConfig          config;
   private final JsonConfig            storage;
   private final Map<UUID, Component>  nickMap;
+  private final Metrics               metrics;
 
   /**
    * Initialize plugin.
@@ -84,6 +90,8 @@ public final class Nicks extends JavaPlugin {
       e.printStackTrace();
     }
     nickMap = new HashMap<>();
+    // Track plugin metrics through bStats
+    metrics = new Metrics(this, 11860);
   }
 
   /**
@@ -107,11 +115,15 @@ public final class Nicks extends JavaPlugin {
     }
     log("Successfully loaded nicknames from Json storage.");
 
-    // Track metrics
-    new Metrics(this, 11860);
-
     // Register plugin commands
     registerCommands();
+
+    // Custom chart to see what percentage of servers are supporting legacy
+    metrics.addCustomChart(new SimplePie("supporting_legacy",
+        () -> String.valueOf(Nicks.config().LEGACY_COLORS)));
+    // Custom chart to see what percentage of servers are using the built in chat formatter
+    metrics.addCustomChart(new SimplePie("using-chat-formatter",
+        () -> String.valueOf(Nicks.config().CHAT_FORMATTER)));
 
     // Register events
     registerEvents(new PlayerJoin(), new ChatFormatter());
