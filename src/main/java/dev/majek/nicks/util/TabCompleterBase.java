@@ -33,7 +33,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 /**
- * Allows for some static utility methods to be available to tab completer
+ * Allows for some static utility methods to be available to tab completer.
  */
 public abstract class TabCompleterBase implements TabCompleter {
   /**

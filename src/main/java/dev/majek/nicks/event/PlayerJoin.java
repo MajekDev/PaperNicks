@@ -37,6 +37,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
  */
 public class PlayerJoin implements Listener {
 
+  /**
+   * Fires when the player joins.
+   *
+   * @param event The event.
+   */
   @EventHandler(priority = EventPriority.HIGHEST)
   public void onPlayerJoin(PlayerJoinEvent event) {
     if (Nicks.core().hasNick(event.getPlayer().getUniqueId())) {
