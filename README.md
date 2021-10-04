@@ -1,3 +1,5 @@
+# NOTE: All of the functionality of this plugin is included in [HexNicks](https://github.com/Majekdor/HexNicks). Use that plugin instead.
+
 # PaperNicks by Majekdor
 PaperNicks is a nickname plugin designed exclusively for [PaperMC](https://github.com/PaperMC/Paper) 1.16.5 and above. It will run perfectly fine on Minecraft 1.17. It uses [MiniMessage](https://github.com/KyoriPowered/adventure-text-minimessage) for colors in nicknames and stores nicknames as [adventure](https://github.com/KyoriPowered/adventure) components.
 
